@@ -128,43 +128,75 @@ const trialMessage = document.getElementById("trialMessage");
 const noOfTrial = document.getElementById("noOfTrial");
 const guessAlert = document.getElementById("guessAlert");
 const noOfGuesses = document.getElementById("noOfGuesses");
+const prompt = document.getElementById("prompt");
+const userInput = document.getElementById("input");
+const submitButton = document.querySelector("button[type='submit']");
+const rewardOutput = document.getElementById("reward")
 
-inputCommand.textContent = `click the "play" button.`
+inputCommand.textContent = `Click the "play" button to reshuffle or begin.`;
 page3Heading.style.backgroundColor = "pink";
 inputCommand.style.backgroundColor = "yellow";
 heading.style.backgroundColor = "green";
-body.style.backgroundColor = "#CC9999"
 
 let trials = 0;
 let correctGuesses = 0;
+let lowerLimit = 0;
+let upperLimit = 0;
+let randomRange = 0;
 
-trialMessage.textContent = `You have made ${trials} attempts so far.`;
-guessAlert.textContent = `You've made ${correctGuesses} correct guesses so far.`;
+trialMessage.textContent = `So far, you have made ${trials} attempts.`;
+guessAlert.textContent = `You've made ${correctGuesses} correct guesses. Keep Going!`;
+
+function displayInteraction() {
+  userInput.style.display = "block"; // show the number input space
+  submitButton.style.display = "block"; // show the OK button
+  return true
+}
+
+function hideInteraction() {
+  userInput.style.display = "none"; // Hide the number input space
+  submitButton.style.display = "none"; // Hide the OK button
+  return false;
+}
+
+function generateRandomNumber() {
+    lowerLimit = Math.floor(Math.random() * 50); // Between 0 and 49
+    upperLimit = Math.floor(Math.random() * (100 - lowerLimit + 1)) + lowerLimit; // From lowerLimit to 100
+    randomRange = Math.floor(Math.random() * (upperLimit - lowerLimit + 1)) + lowerLimit;
+    prompt.textContent = `Enter a number between ${lowerLimit} and ${upperLimit}:`;
+}
+
+function trialsDisplay() {
+  guessAlert.textContent = `You've made ${correctGuesses} correct guesses. Keep Going!`;
+  trialMessage.textContent = `So far, you have made ${trials} attempts.`;
+  userInput.value = ""; // Clear input field
+}
+
 
 function input() {
-    // Generate random ranges
-    const lowerLimit = Math.floor(Math.random() * 50); // Between 0 and 49
-    const upperLimit = Math.floor(Math.random() * (100 - lowerLimit + 1)) + lowerLimit; // From lowerLimit to 100
-    const randomRange = Math.floor(Math.random() * (upperLimit - lowerLimit + 1)) + lowerLimit;
+    generateRandomNumber();
+}
 
-    const userInput = prompt(`Enter a number between ${lowerLimit} and ${upperLimit}:`);
+function processGuess() {
 
-    if (userInput === null) {
-        // User canceled the prompt
-        alert(`Input canceled. Click "play" to try again.`);
-        return;
+    const userNumber = Number(userInput.value.trim()); // Get user input and convert to number
+
+    if (userInput.value === "") {
+        rewardOutput.textContent = "Please enter a number.";
+        trialsDisplay()
+        return generateRandomNumber();
     }
-
-    const userNumber = Number(userInput); // Convert input to a number
 
     if (isNaN(userNumber)) {
-        alert("Invalid input. Please enter a number.");
-        return input(); // Ask again
+        rewardOutput.textContent = "Invalid input. Please enter a valid number.";
+        trialsDisplay()
+        return generateRandomNumber();
     }
 
-    if ((userNumber < lowerLimit) || (userNumber > upperLimit)) {
-      alert("Your input is higher/lower than stipulated. Try again");
-      return input(); // Ask again
+    if (userNumber < lowerLimit || userNumber > upperLimit) {
+        rewardOutput.textContent = `Your input is outside the range ${lowerLimit}-${upperLimit}. Enter the new Number.`;
+        trialsDisplay()
+        return generateRandomNumber();
     }
 
     trials++;
@@ -172,29 +204,45 @@ function input() {
 
     if (userNumber === randomRange) {
         correctGuesses++;
-        guessAlert.textContent = `You've made ${correctGuesses} correct guesses so far.`;
-        alert("You guessed it! Great job!");
-    } else if (userNumber > randomRange) {
-        alert(`${userNumber} is too high! The robot predicted ${randomRange}.`);
-    } else if (userNumber < randomRange) {
-        alert(`${userNumber} is too low! The robot predicted ${randomRange}.`);
-    } else {
-        alert("Something went wrong. Please try again.");
-    }
+        guessAlert.textContent = `You've made ${correctGuesses} correct guesses. Keep Going!`;
+        rewardOutput.textContent = `You guessed it! Great job! The correct number was ${randomRange}. Keep Going!`;
+        trialsDisplay()
+        generateRandomNumber(); // Start a new round
 
-    // Update guess information
-    guessAlert.textContent = `You've made ${correctGuesses} correct guesses so far.`;
-    trialMessage.textContent = `You have made ${trials} attempts so far.`;
+    } else if (userNumber > randomRange) {
+        rewardOutput.textContent = `${userNumber} is too high! The robot predicted ${randomRange} from between ${lowerLimit}-${upperLimit}. Enter the new Number.`;
+        trialsDisplay()
+        generateRandomNumber(); // Start a new round
+
+    } else if (userNumber < randomRange) {
+        rewardOutput.textContent = `${userNumber} is too low! The robot predicted ${randomRange} from between ${lowerLimit}-${upperLimit}. Enter the new Number.`;
+        trialsDisplay()
+        generateRandomNumber(); // Start a new round
+    }
 }
 
 function restart() {
     trials = 0;
     correctGuesses = 0;
     trialMessage.textContent = `You have made ${trials} attempts so far.`;
-    guessAlert.textContent = `You've made ${correctGuesses} correct guesses so far.`;
-    alert("Game has been reset. Click start to play again.");
+    guessAlert.textContent = `You've made ${correctGuesses} correct guesses. Keep Going!`;
+    rewardOutput.textContent = "Game has been reset. Click 'Play' to start again.";
+    prompt.textContent = "";
+    userInput.value = "";
 }
 
-// Event Listeners
-startButton.addEventListener("click", input);
-restartButton.addEventListener("click", restart);
+// Event Listeners/calling functions
+
+hideInteraction()
+
+startButton.addEventListener("click", () => {
+  input();
+  displayInteraction();
+});
+
+submitButton.addEventListener("click", processGuess);
+
+restartButton.addEventListener("click", () => {
+  restart();
+  hideInteraction();
+});
